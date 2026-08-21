@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 
 from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
@@ -6,6 +7,7 @@ from .ollama_client import generate_response
 from .database import Base, SessionLocal, engine
 from .models import CacheEntry
 from .schemas import CacheQueryRequest, CacheQueryResponse
+from .semantic_cache import add_to_cache, search_cache
 
 
 Base.metadata.create_all(bind=engine)
@@ -56,6 +58,22 @@ async def query_cache(
             source="exact_cache",
         )
 
+    # Semantic cache lookup
+    semantic_results = search_cache(request.query, n_results=1)
+
+    if semantic_results["documents"][0]:
+        distance = semantic_results["distances"][0][0]
+
+        # Lower distance = more semantically similar
+        if distance < 0.6:
+            cached_response = semantic_results["metadatas"][0][0]["response"]
+
+            return CacheQueryResponse(
+                cache_hit=True,
+                answer=cached_response,
+                source="semantic_cache",
+            )
+
     response = await generate_response(request.query)
 
     entry = CacheEntry(
@@ -73,6 +91,12 @@ async def query_cache(
     db.add(entry)
     db.commit()
 
+    add_to_cache(
+        cache_id=str(uuid4()),
+        prompt=request.query,
+        response=response,
+    )
+    
     return CacheQueryResponse(
         cache_hit=False,
         answer=response,
