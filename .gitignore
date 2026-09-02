@@ -14,3 +14,4 @@ data/generated/
 .env
 .env.*
 !.env.example
+graphify-out/
