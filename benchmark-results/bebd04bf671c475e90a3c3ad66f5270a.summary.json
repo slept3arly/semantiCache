@@ -1,0 +1,45 @@
+{
+  "run_id": "bebd04bf671c475e90a3c3ad66f5270a",
+  "created_at_utc": "2026-10-23T09:26:59.955181+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "configurations": [
+    "no_cache",
+    "exact_only",
+    "pure_semantic",
+    "proposed"
+  ],
+  "summaries_by_configuration": {
+    "exact_only": {
+      "request_count": 6,
+      "median_latency_ms": 4010.7088615000066,
+      "p95_latency_ms": 16071.455503999914,
+      "hit_rate": 0.16666666666666666,
+      "hit_rate_request_count": 6,
+      "error_count": 0
+    },
+    "no_cache": {
+      "request_count": 6,
+      "median_latency_ms": 5110.456738500034,
+      "p95_latency_ms": 6363.988836999852,
+      "hit_rate": 0.0,
+      "hit_rate_request_count": 6,
+      "error_count": 0
+    },
+    "proposed": {
+      "request_count": 6,
+      "median_latency_ms": 4283.80532600022,
+      "p95_latency_ms": 9311.25517800001,
+      "hit_rate": 0.16666666666666666,
+      "hit_rate_request_count": 6,
+      "error_count": 0
+    },
+    "pure_semantic": {
+      "request_count": 6,
+      "median_latency_ms": 4140.354284500063,
+      "p95_latency_ms": 9107.13361199987,
+      "hit_rate": 0.16666666666666666,
+      "hit_rate_request_count": 6,
+      "error_count": 0
+    }
+  }
+}

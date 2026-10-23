@@ -1,0 +1,14 @@
+{
+  "run_id": "393012d3888742f5b43bd2b213a83af2",
+  "created_at_utc": "2026-10-23T09:09:07.507924+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "available_configuration": "current_exact_then_metadata_aware_semantic",
+  "summary": {
+    "request_count": 6,
+    "median_latency_ms": 3989.4653115002257,
+    "p95_latency_ms": 11526.488628000152,
+    "hit_rate": 0.16666666666666666,
+    "hit_rate_request_count": 6,
+    "error_count": 0
+  }
+}
