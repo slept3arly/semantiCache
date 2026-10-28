@@ -112,6 +112,10 @@ answer-quality assessment independent of cache hits, and analysis of cache
 correctness, freshness, cross-user isolation, hit rate, and latency
 distributions. No performance improvement is claimed here.
 
+The exploratory, fixed-pair semantic distance evaluation is documented in
+[evaluation/README.md](evaluation/README.md). It runs against an ephemeral
+Chroma collection and does not change production thresholds.
+
 The API has no authentication layer: it scopes entries by the `user_id` and
 other identifiers supplied in each request. This prototype therefore does not
 verify that a caller is entitled to claim a particular user ID.

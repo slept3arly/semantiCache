@@ -1,0 +1,79 @@
+{
+  "dataset_name": "semantiCache exploratory semantic reuse pairs",
+  "dataset_version": 1,
+  "label_definition": "expected_reuse is true when a single cached answer to the source query would reasonably answer the target query; it is false when the queries ask for different information or are unrelated. Labels are manually defined for this exploratory evaluation, independently of measured embedding distance.",
+  "pairs": [
+    {
+      "pair_id": "photosynthesis_paraphrase",
+      "group": "paraphrase",
+      "source_query": "What is photosynthesis?",
+      "target_query": "How do plants convert sunlight into energy?",
+      "expected_reuse": true,
+      "label_rationale": "Both ask for a basic explanation of photosynthesis."
+    },
+    {
+      "pair_id": "password_reset_paraphrase",
+      "group": "paraphrase",
+      "source_query": "How do I reset my password?",
+      "target_query": "I forgot my password; how can I set a new one?",
+      "expected_reuse": true,
+      "label_rationale": "Both ask for steps to regain or change access after forgetting a password."
+    },
+    {
+      "pair_id": "water_boiling_paraphrase",
+      "group": "paraphrase",
+      "source_query": "What is the boiling point of water?",
+      "target_query": "At what temperature does water boil?",
+      "expected_reuse": true,
+      "label_rationale": "Both ask for the boiling temperature of water."
+    },
+    {
+      "pair_id": "photosynthesis_related_question",
+      "group": "related_distinct",
+      "source_query": "What is photosynthesis?",
+      "target_query": "What factors affect the rate of photosynthesis?",
+      "expected_reuse": false,
+      "label_rationale": "The topic overlaps, but a definition does not answer a question about rate-affecting factors."
+    },
+    {
+      "pair_id": "paris_related_facts",
+      "group": "related_distinct",
+      "source_query": "What is the capital of France?",
+      "target_query": "What is the population of Paris?",
+      "expected_reuse": false,
+      "label_rationale": "The queries concern the same place but request different facts."
+    },
+    {
+      "pair_id": "ibuprofen_related_questions",
+      "group": "related_distinct",
+      "source_query": "Can ibuprofen reduce pain?",
+      "target_query": "What are the side effects of ibuprofen?",
+      "expected_reuse": false,
+      "label_rationale": "The queries concern the same medicine but ask different questions."
+    },
+    {
+      "pair_id": "bread_and_moon",
+      "group": "unrelated",
+      "source_query": "How do I bake sourdough bread?",
+      "target_query": "What is the distance from Earth to the Moon?",
+      "expected_reuse": false,
+      "label_rationale": "The queries have unrelated subjects and answers."
+    },
+    {
+      "pair_id": "binary_search_and_tides",
+      "group": "unrelated",
+      "source_query": "Explain binary search.",
+      "target_query": "How are ocean tides caused?",
+      "expected_reuse": false,
+      "label_rationale": "The queries have unrelated subjects and answers."
+    },
+    {
+      "pair_id": "dehydration_and_roses",
+      "group": "unrelated",
+      "source_query": "What are common signs of dehydration?",
+      "target_query": "How should I prune a rose bush?",
+      "expected_reuse": false,
+      "label_rationale": "The queries have unrelated subjects and answers."
+    }
+  ]
+}

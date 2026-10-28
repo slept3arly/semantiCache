@@ -1,90 +1,123 @@
 # semantiCache benchmark
 
-`benchmark.py` sends the same fixed sequence of requests to a running
-semantiCache API under each selected cache policy. It writes all per-request
-measurements to CSV and per-policy summaries to adjacent JSON. Latency is
-end-to-end HTTP time, including API lookup, embedding work, and any Ollama
-generation.
+`benchmark.py` sends a deterministic request sequence to a running API under
+each selected policy. It writes per-request CSV observations and per-policy
+JSON summaries. Latency covers the HTTP request through response parsing,
+including lookup, embedding work, and Ollama generation. The benchmark does not
+evaluate answer quality.
 
-## Run
+## Run safely
 
-Start the application and its configured Ollama service, then run from the
-repository root:
+Run against a disposable deployment with its own SQLite and ChromaDB stores.
+Cache policies write misses to those stores, and this harness does not reset or
+delete data. Start the API and configured Ollama service in that environment,
+then from the repository root run:
 
 ```bash
 uvicorn app.main:app --host 127.0.0.1 --port 8000
-python benchmarks/benchmark.py --base-url http://127.0.0.1:8000 --repetitions 2
+python benchmarks/benchmark.py --base-url http://127.0.0.1:8000 --repetitions 2 \
+  --policies no_cache exact_only pure_semantic proposed
 ```
 
-The default run compares all four policies. A small explicit comparison is:
+The default run ID is a fresh random UUID. A fixed `--run-id` reproduces the
+same workload and measured namespaces. Reusing that ID deliberately reuses its
+persistent entries, so it is a warm-state continuation, not a cold repetition.
+Use a **new run ID for a cold run**. Output defaults to
+`benchmark-results/<run-id>.csv` and an adjacent `.summary.json`. The output
+path is overwritten if it already exists.
 
-```bash
-python benchmarks/benchmark.py --base-url http://127.0.0.1:8000 --repetitions 2 --policies no_cache exact_only pure_semantic proposed
-```
+Each run ID and policy pair maps to a distinct `cache_namespace`. Requests
+within a case share their intended user/session/conversation scope, while cases use separate
+scope IDs. This prevents cases from seeding one another. Namespaces are derived
+from the run ID and policy, and the API hashes namespace plus user ID for the
+internal cache key. Stores are not cleared: reusing a run ID can retrieve old
+entries, and the truncated namespace hash has a theoretical collision risk.
+The JSON summary records that namespaces are isolated but a fresh run ID is
+required; the CSV records the namespace on each request.
 
-The default run writes files under `benchmark-results/`. Use `--output
-benchmark-results/run.csv` to choose a CSV path; the summary is written next to
-it with `.summary.json` appended in place of `.csv`. Each run gets a generated
-run ID and distinct namespace per policy. Raw user/session/conversation IDs and
-queries are held constant across policies; the namespace is an additional
-internal partition. Use a fresh run ID for a cold comparison. Reusing it can
-make a later run warm.
+Before measured requests, the harness sends one unmeasured `proposed` request by
+default. Set `--warmup-requests 0` to disable it or choose another nonnegative
+count. The warm-up namespace includes a fresh per-invocation UUID and is
+separate from measured namespaces; warm-up data is left in the persistent stores
+and is not deleted. A successful proposed miss loads the lazy embedding model,
+calls Ollama, and stores only under the warm-up namespace. Warm-up errors are
+recorded in the summary and do not become measured rows. This reduces first-use
+effects but does not eliminate backend, hardware, or service variability.
 
-The workload contains three experiments:
+## Workload and labels
 
-- `warm_exact`: first request is expected to miss; identical repeats are
-  expected to hit under the selected policy (the `source` identifies whether
-  the hit was exact or semantic).
-- `cold_unique`: each request has a separate user/session/conversation scope and
-  is expected to miss.
-- `semantic_probe`: a seed question followed by a paraphrase. The paraphrase's
-  cache-hit expectation is undefined for semantic-enabled policies because
-  model similarity is measured, not assumed. It is expected to miss for
-  `no_cache` and `exact_only`.
+With `--repetitions N`, each policy receives `2 × N + 11` requests. The fixed
+queries and case IDs are constructed in `build_workload`:
 
-The first request in each repeated-query or semantic-probe sequence is the
-measured seed; there is no unmeasured warm-up phase. `no_cache` expects misses
-throughout. For caching policies, the first repeated-query request is expected
-to miss and subsequent identical requests to hit. Under `pure_semantic`, those
-repeats are semantic hits rather than exact hits. Cold-unique requests use a
-different scope per item and are expected misses.
+| Case | Requests and purpose | Expected decision |
+| --- | --- | --- |
+| `exact_repeat` | Seed with “What is the capital of France?” and issue N identical repeats. | Seed misses. Repeats hit for `exact_only`, `pure_semantic`, and `proposed`; `no_cache` always misses. |
+| `paraphrase` | Seed “What is photosynthesis?” then ask “How do plants convert sunlight into chemical energy?” | Manually labeled reusable. Semantic-enabled policies are expected to hit; `no_cache` and `exact_only` are expected to miss. A semantic miss is recorded as incorrect relative to this label, not rewritten. |
+| `related_distinct` | Seed “What is photosynthesis?” then ask “What is the chemical equation for photosynthesis?” | Manually labeled non-reusable; probe expected to miss under every policy. |
+| `unrelated` | Seed “What is photosynthesis?” then ask “How do I reset my email password?” | Manually labeled non-reusable; probe expected to miss under every policy. |
+| `cold_unique` | Submit N unique query and scope combinations. | Every request is expected to miss. |
+| `metadata_isolation` | Seed a boiling-point question, then repeat the identical question once as another user and once in another session. | Answer content is labeled reusable for all rows, but every request is expected to miss: probes test user and session authorization boundaries. |
 
-`decision_correct` compares actual `cache_hit` with the expected decision only
-when that expectation is defined. It is a cache-decision check, not a judgment
-that a semantically returned answer is relevant or factually correct. No answer
-quality evaluation is performed. Hit rate uses successful responses that
-returned a boolean `cache_hit`; errors are counted separately. P95 uses the
-nearest-rank definition (`ceil(0.95 * n)`). Empty latency or hit-rate samples
-are reported as JSON `null`.
+`expected_reusable` labels whether the cached answer content is appropriate for
+the target query, independent of cache scope or authorization. `expected_cache_hit`
+is the expected behavior of the complete policy, including metadata constraints;
+`actual_cache_hit` is the API's observed response. Thus the metadata-isolation
+probes have reusable content and an expected miss. The paraphrase label is an
+explicit hypothesis, not a guarantee that the current embedding model and
+`distance < 0.6` rule will accept it. Related and unrelated probes are labeled
+non-reusable, so a hit is incorrect against the content label. These manual
+labels do not establish that an answer is factually correct or useful.
 
-## Available configurations and limits
+The sequence is deterministic for a fixed run ID, repetition count, and
+policies. Policy workloads use the same request IDs, case IDs, queries, and raw
+metadata identifiers. For each case role and repeat iteration, the harness
+issues that phase for all policies, rotating the selected policy order by one
+position from the previous phase. Seed and probe ordering within each policy is
+preserved. This reduces fixed-order bias; it does not eliminate backend,
+hardware, or service variability. The workload is not publication-ready by
+itself.
 
-The API accepts a validated `cache_policy` request field and optional
-`cache_namespace`. `proposed` is the default when omitted. Policies are:
+## Metrics and output
 
-- `no_cache`: bypass all cache reads and writes; call Ollama per request.
-- `exact_only`: exact SQLite lookup, then Ollama; generated responses are
-  written to SQLite only.
-- `pure_semantic`: skip exact and lexical lookup; use the existing
-  metadata-scoped Chroma search and `distance < 0.6`, then Ollama. It writes to
-  SQLite and Chroma. This is a semantic-only retrieval baseline with user,
-  session, conversation, category, and expiry enforcement, not an unscoped or
-  unsafe semantic search.
-- `proposed`: exact → lexical (`Jaccard >= 0.8`) → metadata-aware semantic →
-  Ollama. It writes to SQLite and Chroma.
+The CSV records case/request IDs, case type and role, policy, namespace, query
+and metadata identifiers, expected reuse and cache decision, actual hit,
+source, latency, HTTP status, decision correctness, and error. `decision_correct`
+is blank when the expectation is undefined, the response lacks a valid hit
+boolean, or the request failed.
 
-Per-policy summaries include request count, median and nearest-rank P95
-latency, hit rate, and error count. The CSV records policy, experiment,
-expected and actual cache decisions, source, status, latency, and errors.
-Decision correctness is not answer-quality evaluation; no response correctness
-or semantic equivalence is inferred from a cache hit.
+Per-policy summaries report request count, median latency, nearest-rank P95
+(`ceil(0.95 × n)`), hit rate, decision accuracy and its evaluation count, and
+error count. Hit rate uses successful responses with a boolean `cache_hit` as
+its denominator. Decision accuracy uses only successful requests with a defined
+expected decision and a boolean actual result. Failed requests are not counted
+as cache misses in either denominator. Latency summaries include recorded
+failed-request durations. Empty metric samples are JSON `null` where applicable.
 
-This is a request-level prototype benchmark, not a controlled performance or
-answer-quality study. Cold requests call the configured LLM and can fail or vary
-with service availability, model state, and generation behavior. Latency also
-depends on the host, persistent database contents, model warm-up, and concurrent
-load. The namespace partitions cache entries across policies using a stable
-hashed internal user key; omitting the namespace preserves ordinary application
-behavior. It does not isolate one benchmark run from a prior run that reuses
-the same run ID. Run against a disposable/test deployment when possible:
-caching policies populate its SQLite and ChromaDB stores.
+Decision accuracy compares `actual_cache_hit` with `expected_cache_hit`; it is a
+whole-policy cache-decision metric, not a semantic false-accept/false-reject
+metric. A metadata-ineligible probe that misses is correctly scored as a policy
+decision, not counted as a semantic false reject. The benchmark does not
+currently calculate semantic false accepts or false rejects. A future semantic
+error analysis should use only content-labeled probes that are eligible under
+the requested metadata scope, and report metadata-denied cases separately.
+
+The four policies retain their API definitions: `no_cache` bypasses reads and
+writes; `exact_only` uses scoped exact SQLite lookup; `pure_semantic` uses
+metadata-scoped Chroma retrieval with `distance < 0.6`; and `proposed` follows
+exact, lexical (`Jaccard >= 0.8`), metadata-aware semantic retrieval, then
+Ollama. Cache hits and decision accuracy are retrieval measures, not answer
+quality measures.
+
+The JSON summary records repetitions, workload version, request timeout, the
+actual policy order for each phase, warm-up count/namespace/errors, cache
+namespace strategy, thresholds, one-hour TTL, benchmark-process Python,
+ChromaDB, and Sentence Transformers versions, Ollama model identifier and
+endpoint, and embedding model name. The Ollama values come from the benchmark
+process environment and local source defaults; the API process does not expose
+its runtime settings, so they may differ. Likewise, runtime package versions
+are those of the benchmark process. The embedding revision is reported as
+unknown: production constructs SentenceTransformer from a model name without
+pinning or exposing a resolved revision. Project constants are read from the
+local source checkout without loading the embedding model or opening the
+persistent Chroma collection. For a remote API or a server running a different
+checkout, those local constants may not describe the serving process.

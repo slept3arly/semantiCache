@@ -1,0 +1,282 @@
+{
+  "dataset_name": "semantiCache exploratory semantic reuse pairs",
+  "dataset_version": 1,
+  "label_definition": "expected_reuse is true when a single cached answer to the source query would reasonably answer the target query; it is false when the queries ask for different information or are unrelated. Labels are manually defined for this exploratory evaluation, independently of measured embedding distance.",
+  "measured_at_utc": "2026-10-27T17:00:15.365779+00:00",
+  "model_name_or_path": "all-MiniLM-L6-v2",
+  "model_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+  "chromadb_version": "1.5.9",
+  "collection_space": "l2",
+  "current_production_threshold": 0.6,
+  "candidate_thresholds_use_rule": "distance < threshold",
+  "expiry_ttl_hours": 1.0,
+  "collection_type": "ephemeral",
+  "records": [
+    {
+      "pair_id": "photosynthesis_paraphrase",
+      "group": "paraphrase",
+      "source_query": "What is photosynthesis?",
+      "target_query": "How do plants convert sunlight into energy?",
+      "expected_reuse": true,
+      "label_rationale": "Both ask for a basic explanation of photosynthesis.",
+      "candidate_count": 1,
+      "distance": 0.7318055033683777,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": false
+    },
+    {
+      "pair_id": "password_reset_paraphrase",
+      "group": "paraphrase",
+      "source_query": "How do I reset my password?",
+      "target_query": "I forgot my password; how can I set a new one?",
+      "expected_reuse": true,
+      "label_rationale": "Both ask for steps to regain or change access after forgetting a password.",
+      "candidate_count": 1,
+      "distance": 0.27810871601104736,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": true
+    },
+    {
+      "pair_id": "water_boiling_paraphrase",
+      "group": "paraphrase",
+      "source_query": "What is the boiling point of water?",
+      "target_query": "At what temperature does water boil?",
+      "expected_reuse": true,
+      "label_rationale": "Both ask for the boiling temperature of water.",
+      "candidate_count": 1,
+      "distance": 0.31749218702316284,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": true
+    },
+    {
+      "pair_id": "photosynthesis_related_question",
+      "group": "related_distinct",
+      "source_query": "What is photosynthesis?",
+      "target_query": "What factors affect the rate of photosynthesis?",
+      "expected_reuse": false,
+      "label_rationale": "The topic overlaps, but a definition does not answer a question about rate-affecting factors.",
+      "candidate_count": 1,
+      "distance": 0.5643820762634277,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": true
+    },
+    {
+      "pair_id": "paris_related_facts",
+      "group": "related_distinct",
+      "source_query": "What is the capital of France?",
+      "target_query": "What is the population of Paris?",
+      "expected_reuse": false,
+      "label_rationale": "The queries concern the same place but request different facts.",
+      "candidate_count": 1,
+      "distance": 0.6830071210861206,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": false
+    },
+    {
+      "pair_id": "ibuprofen_related_questions",
+      "group": "related_distinct",
+      "source_query": "Can ibuprofen reduce pain?",
+      "target_query": "What are the side effects of ibuprofen?",
+      "expected_reuse": false,
+      "label_rationale": "The queries concern the same medicine but ask different questions.",
+      "candidate_count": 1,
+      "distance": 0.7051242589950562,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": false
+    },
+    {
+      "pair_id": "bread_and_moon",
+      "group": "unrelated",
+      "source_query": "How do I bake sourdough bread?",
+      "target_query": "What is the distance from Earth to the Moon?",
+      "expected_reuse": false,
+      "label_rationale": "The queries have unrelated subjects and answers.",
+      "candidate_count": 1,
+      "distance": 1.6583890914916992,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": false
+    },
+    {
+      "pair_id": "binary_search_and_tides",
+      "group": "unrelated",
+      "source_query": "Explain binary search.",
+      "target_query": "How are ocean tides caused?",
+      "expected_reuse": false,
+      "label_rationale": "The queries have unrelated subjects and answers.",
+      "candidate_count": 1,
+      "distance": 1.7055779695510864,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": false
+    },
+    {
+      "pair_id": "dehydration_and_roses",
+      "group": "unrelated",
+      "source_query": "What are common signs of dehydration?",
+      "target_query": "How should I prune a rose bush?",
+      "expected_reuse": false,
+      "label_rationale": "The queries have unrelated subjects and answers.",
+      "candidate_count": 1,
+      "distance": 2.040249824523926,
+      "metadata_eligible": true,
+      "candidate_scope_matches": true,
+      "candidate_expires_at": 1793124015.365779,
+      "passes_current_threshold": false
+    }
+  ],
+  "threshold_reports": [
+    {
+      "threshold": 0.4,
+      "accepted_count": 2,
+      "rejected_count": 7,
+      "accepted_pair_ids": [
+        "password_reset_paraphrase",
+        "water_boiling_paraphrase"
+      ],
+      "rejected_pair_ids": [
+        "photosynthesis_paraphrase",
+        "photosynthesis_related_question",
+        "paris_related_facts",
+        "ibuprofen_related_questions",
+        "bread_and_moon",
+        "binary_search_and_tides",
+        "dehydration_and_roses"
+      ],
+      "false_accept_count": 0,
+      "false_accept_pair_ids": [],
+      "false_reject_count": 1,
+      "false_reject_pair_ids": [
+        "photosynthesis_paraphrase"
+      ],
+      "labeled_pair_count": 9,
+      "ineligible_pair_ids": []
+    },
+    {
+      "threshold": 0.6,
+      "accepted_count": 3,
+      "rejected_count": 6,
+      "accepted_pair_ids": [
+        "password_reset_paraphrase",
+        "water_boiling_paraphrase",
+        "photosynthesis_related_question"
+      ],
+      "rejected_pair_ids": [
+        "photosynthesis_paraphrase",
+        "paris_related_facts",
+        "ibuprofen_related_questions",
+        "bread_and_moon",
+        "binary_search_and_tides",
+        "dehydration_and_roses"
+      ],
+      "false_accept_count": 1,
+      "false_accept_pair_ids": [
+        "photosynthesis_related_question"
+      ],
+      "false_reject_count": 1,
+      "false_reject_pair_ids": [
+        "photosynthesis_paraphrase"
+      ],
+      "labeled_pair_count": 9,
+      "ineligible_pair_ids": []
+    },
+    {
+      "threshold": 0.8,
+      "accepted_count": 6,
+      "rejected_count": 3,
+      "accepted_pair_ids": [
+        "photosynthesis_paraphrase",
+        "password_reset_paraphrase",
+        "water_boiling_paraphrase",
+        "photosynthesis_related_question",
+        "paris_related_facts",
+        "ibuprofen_related_questions"
+      ],
+      "rejected_pair_ids": [
+        "bread_and_moon",
+        "binary_search_and_tides",
+        "dehydration_and_roses"
+      ],
+      "false_accept_count": 3,
+      "false_accept_pair_ids": [
+        "photosynthesis_related_question",
+        "paris_related_facts",
+        "ibuprofen_related_questions"
+      ],
+      "false_reject_count": 0,
+      "false_reject_pair_ids": [],
+      "labeled_pair_count": 9,
+      "ineligible_pair_ids": []
+    },
+    {
+      "threshold": 1.0,
+      "accepted_count": 6,
+      "rejected_count": 3,
+      "accepted_pair_ids": [
+        "photosynthesis_paraphrase",
+        "password_reset_paraphrase",
+        "water_boiling_paraphrase",
+        "photosynthesis_related_question",
+        "paris_related_facts",
+        "ibuprofen_related_questions"
+      ],
+      "rejected_pair_ids": [
+        "bread_and_moon",
+        "binary_search_and_tides",
+        "dehydration_and_roses"
+      ],
+      "false_accept_count": 3,
+      "false_accept_pair_ids": [
+        "photosynthesis_related_question",
+        "paris_related_facts",
+        "ibuprofen_related_questions"
+      ],
+      "false_reject_count": 0,
+      "false_reject_pair_ids": [],
+      "labeled_pair_count": 9,
+      "ineligible_pair_ids": []
+    },
+    {
+      "threshold": 1.2,
+      "accepted_count": 6,
+      "rejected_count": 3,
+      "accepted_pair_ids": [
+        "photosynthesis_paraphrase",
+        "password_reset_paraphrase",
+        "water_boiling_paraphrase",
+        "photosynthesis_related_question",
+        "paris_related_facts",
+        "ibuprofen_related_questions"
+      ],
+      "rejected_pair_ids": [
+        "bread_and_moon",
+        "binary_search_and_tides",
+        "dehydration_and_roses"
+      ],
+      "false_accept_count": 3,
+      "false_accept_pair_ids": [
+        "photosynthesis_related_question",
+        "paris_related_facts",
+        "ibuprofen_related_questions"
+      ],
+      "false_reject_count": 0,
+      "false_reject_pair_ids": [],
+      "labeled_pair_count": 9,
+      "ineligible_pair_ids": []
+    }
+  ]
+}
